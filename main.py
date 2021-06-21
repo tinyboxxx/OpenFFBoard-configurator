@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QWidget,QGroupBox,QDialog,QVBoxLayout,QMessageBox
 from PyQt5.QtCore import QIODevice,pyqtSignal
 from PyQt5.QtCore import QTimer,QThread
+from PyQt5.QtCore import QTranslator
 from PyQt5 import uic
 from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo 
 import sys,itertools
@@ -237,6 +238,9 @@ if __name__ == '__main__':
     #appctxt = ApplicationContext()       # 1. Instantiate ApplicationContext
 
     app = QApplication(sys.argv)
+    trans = QTranslator()  # 准备开始翻译
+    trans.load("./res/serialchooser_zh_CN")  # 读取翻译文件，省略.qm后缀
+    app.installTranslator(trans)  # 翻译
     window = MainUi()
     window.setWindowTitle("Open FFBoard Configurator")
     window.show()
