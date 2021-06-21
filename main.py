@@ -8,30 +8,33 @@ from PyQt5.QtCore import QTranslator
 from PyQt5 import uic
 from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo 
 import sys,itertools
-
+import config 
 from helper import res_path
 import serial_ui
+from dfu_ui import DFUModeUI
 
 # This GUIs version
-version = "1.1.0"
+version = "1.3.10"
 # Minimal supported firmware version. 
 # Major version of firmware must match firmware. Minor versions must be higher or equal
-min_fw = "1.1.0"
+min_fw = "1.3.12"
 
 # UIs
 import system_ui
 import ffb_ui
+import axis_ui
 import tmc4671_ui
 import pwmdriver_ui
 import serial_comms
 import midi_ui
-
+import errors
+import tmcdebug_ui
 
 class MainUi(QMainWindow):
     serial = None
-    save = pyqtSignal()
     mainClassUi = None
     timeouting = False
+    connected = False
     
     def __init__(self):
         super(MainUi, self).__init__()
@@ -45,6 +48,8 @@ class MainUi(QMainWindow):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.updateTimer)
         self.tabWidget_main.currentChanged.connect(self.tabChanged)
+
+        self.errorsDialog = errors.ErrorsDialog(self)
 
         self.setup()
 
@@ -63,26 +68,56 @@ class MainUi(QMainWindow):
         self.serialchooser.connected.connect(self.serialConnected)
         self.timer.start(5000)
         self.systemUi = system_ui.SystemUI(main = self)
-        self.serialchooser.connected.connect(self.systemUi.serialConnected)
-        self.systemUi.pushButton_save.clicked.connect(self.saveClicked)
-        self.setSaveBtn(False)
+        self.serialchooser.connected.connect(self.systemUi.setEnabled)
 
-        self.actionFFB_Wheel_TMC_wizard.triggered.connect(self.ffbwizard)
+        self.serialchooser.connected.connect(self.errorsDialog.setEnabled)
+        self.errorsDialog.setEnabled(False)
+
+        self.actionDFU_Uploader.triggered.connect(self.dfuUploader)
+
+        self.actionSave_chip_config.triggered.connect(self.saveConfig)
+        self.actionErrors.triggered.connect(self.errorsDialog.show) # Open error list
+        self.actionRestore_chip_config.triggered.connect(self.loadConfig)
+        self.serialchooser.connected.connect(self.actionSave_chip_config.setEnabled)
+        self.serialchooser.connected.connect(self.actionRestore_chip_config.setEnabled)
 
         layout = QVBoxLayout()
+        layout.setContentsMargins(0,0,0,0)
         layout.addWidget(self.systemUi)
         self.groupBox_main.setLayout(layout)
 
-    def ffbwizard(self):
-        msg = QMessageBox(QMessageBox.Information,"Wizard","Not implemented")
+
+    def dfuUploader(self):
+        msg = QDialog()#QMessageBox(QMessageBox.Information,"DFU","Switched to DFU mode.\nConnect with DFU programmer")
+        msg.setWindowTitle("DFU Mode")
+        dfu = DFUModeUI(msg)
+        l = QVBoxLayout()
+        l.addWidget(dfu)
+        msg.setLayout(l)
         msg.exec_()
+        dfu.deleteLater()
 
     def openAbout(self):
         AboutDialog(self).exec_()
 
+    def saveConfig(self):
+        self.comms.serialGetAsync("flashdump",config.saveDump)
+
+    def loadConfig(self):
+        dump = config.loadDump()
+        if not dump:
+            return
+        for e in dump["flash"]:
+            cmd = "flashraw?{}={}\n".format(e["addr"], e["val"])
+            self.comms.serialWrite(cmd)
+        # Message
+        msg = QMessageBox(QMessageBox.Information,"Restore flash dump","Uploaded flash dump.\nPlease reboot.")
+        msg.exec_()
+
+
     def updateTimer(self):
         def f(i):
-            if i != self.systemUi.mainID:
+            if i != self.serialchooser.mainID:
                 self.resetPort()       
                 self.log("Communication error. Please reconnect")
             else:
@@ -96,19 +131,12 @@ class MainUi(QMainWindow):
             else:
                 self.timeouting = True
                 self.comms.serialGetAsync("id?",f,int)
+                self.comms.serialGetAsync("heapfree",self.systemUi.updateRamUse)
                 
             
 
     def log(self,s):
-        self.logBox.append(s)
-
-
-    def setSaveBtn(self,enabled):
-        self.systemUi.pushButton_save.setEnabled(enabled)
-
-    def saveClicked(self):
-        self.log("Save")
-        self.save.emit()
+        self.systemUi.logBox_1.append(s)
 
     def tabChanged(self,id):
         pass
@@ -128,39 +156,56 @@ class MainUi(QMainWindow):
         return(name in names)
 
     def resetTabs(self):
-        self.setSaveBtn(False)
         self.activeClasses = {}
+        self.systemUi.setSaveBtn(False)
         for i in range(self.tabWidget_main.count()-1,0,-1):
             self.delTab(self.tabWidget_main.widget(i))
     
     def updateTabs(self):
         def updateTabs_cb(active):
             lines = [l.split(":") for l in active.split("\n") if l]
-            newActiveClasses = {i[0]:{"id":i[1],"ui":None} for i in lines}
+
+            newActiveClasses = {i[0]+":"+i[2]:{"name":i[0],"id":i[1],"unique":i[2],"ui":None} for i in lines}
             deleteClasses = [c for name,c in self.activeClasses.items() if name not in newActiveClasses]
             #print(newActiveClasses)
             for c in deleteClasses:
                 self.delTab(c)
-            for name,c in newActiveClasses.items():
+            for name,cl in newActiveClasses.items():
                 if name in self.activeClasses:
                     continue
                 
-                if name == "FFB Wheel":
+                if cl["name"] == "FFB Wheel":
                     self.mainClassUi = ffb_ui.FfbUI(main = self)
                     self.activeClasses[name] = self.mainClassUi
-                if name == "TMC4671":
-                    c = tmc4671_ui.TMC4671Ui(main = self)
+                    self.systemUi.setSaveBtn(True)
+                elif  cl["name"] == "Axis":
+                    c = axis_ui.AxisUI(main = self,unique = cl["unique"])
+                    n = cl["name"]+':'+c.axis.upper()
                     self.activeClasses[name] = c
-                    self.addTab(c,name)
-                if name == "PWM":
+                    self.addTab(c,n)
+                    self.systemUi.setSaveBtn(True)
+                elif cl["name"].startswith("TMC4671"):
+                    c = tmc4671_ui.TMC4671Ui(main = self,unique = cl["unique"])
+                    n = cl["name"]+':'+c.axis.upper()
+                    self.activeClasses[name] = c
+                    self.addTab(c,n)
+                    self.systemUi.setSaveBtn(True)
+                elif cl["name"] == "PWM":
                     c = pwmdriver_ui.PwmDriverUI(main = self)
                     self.activeClasses[name] = c
-                    self.addTab(c,name)
-                if name == "MIDI":
+                    self.addTab(c,cl["name"])
+                    self.systemUi.setSaveBtn(True)
+                elif cl["name"] == "MIDI":
                     c = midi_ui.MidiUI(main = self)
                     self.activeClasses[name] = c
-                    self.addTab(c,name)
+                    self.addTab(c,cl["name"])
+                elif cl["name"] == "TMC Debug Bridge":
+                    c = tmcdebug_ui.TMCDebugUI(main = self)
+                    self.activeClasses[name] = c
+                    self.addTab(c,cl["name"])
+                    
         self.comms.serialGetAsync("lsactive",updateTabs_cb)
+        self.comms.serialGetAsync("heapfree",self.systemUi.updateRamUse)
 
     def reconnect(self):
         self.resetPort()
@@ -179,18 +224,23 @@ class MainUi(QMainWindow):
         self.resetTabs()
         
 
-    def versionCheck(self,ver):
-        
+    def versionCheck(self,versions):
+        ver,minVerGuiStr = versions
         self.fwverstr = ver.replace("\n","")
         if not self.fwverstr:
             self.log("Communication error")
             self.resetPort()
-            
+        
+        minVerGui = [int(i) for i in minVerGuiStr.split(".")]
+
         fwver = [int(i) for i in self.fwverstr.split(".")]
         min_fw_t = [int(i) for i in min_fw.split(".")]
+        guiVersion = [int(i) for i in version.split(".")]
+
         self.log("FW v" + self.fwverstr)
         fwoutdated = False
-        guioutdated = fwver[0] > min_fw_t[0] or fwver[1] > min_fw_t[1]
+        guioutdated = False
+        #guioutdated = minVerGui#fwver[0] > min_fw_t[0] or fwver[1] > min_fw_t[1]
 
         for v in itertools.zip_longest(min_fw_t,fwver,fillvalue=0):
             if(v[0] < v[1]): # Newer
@@ -199,25 +249,43 @@ class MainUi(QMainWindow):
             if(v[0] > v[1]):
                 fwoutdated = True
                 break
+        for v in itertools.zip_longest(minVerGui,guiVersion,fillvalue=0):
+            if(v[0] < v[1]): # Newer
+                break
+            # If same higher version then check minor version
+            if(v[0] > v[1]):
+                guioutdated = True
+                break
+
         if guioutdated:
-            msg = QMessageBox(QMessageBox.Information,"Incompatible GUI","The GUI you are using ("+ version +") may be too old for this firmware.\nPlease make sure both firmware and GUI are up to date.")
+            msg = QMessageBox(QMessageBox.Information,"Incompatible GUI","The GUI you are using ("+ version +") may be too old for this firmware.\n("+minVerGuiStr+" required)\nPlease make sure both firmware and GUI are up to date.")
             msg.exec_()
         elif fwoutdated:
-            msg = QMessageBox(QMessageBox.Information,"Incompatible firmware","The firmware you are using ("+ self.fwverstr +") is too old for this GUI.\nPlease make sure both firmware and GUI are up to date.")
+            msg = QMessageBox(QMessageBox.Information,"Incompatible firmware","The firmware you are using ("+ self.fwverstr +") is too old for this GUI.\n("+min_fw+" required)\nPlease make sure both firmware and GUI are up to date.")
             msg.exec_()
-
-
 
 
     def serialConnected(self,connected):
-        if(connected):
-            if(self.comms.serialGet("id?;")):
-                self.log("Connected")
-                self.fwverstr = self.comms.serialGetAsync("swver",self.versionCheck)
-            else:
+        
+        def t():
+            if not self.connected:
                 self.log("Can't detect board")
                 self.resetPort()
+
+        def f(id):
+            if(id):
+                self.connected = True
+                serialTim.stop()
+                self.log("Connected")
+                self.fwverstr = self.comms.serialGetAsync(["swver","minVerGui"],self.versionCheck)
+            
+        serialTim = QTimer()
+        if(connected):
+            serialTim.singleShot(500,t)
+            self.comms.serialGetAsync("id?",f)  
+
         else:
+            self.connected = False
             self.log("Disconnected")
             self.resetTabs()
 

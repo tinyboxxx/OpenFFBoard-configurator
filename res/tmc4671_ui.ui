@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>446</width>
-    <height>461</height>
+    <width>707</width>
+    <height>590</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,110 +15,176 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QGroupBox" name="groupBox">
+    <widget class="QGroupBox" name="groupBox_tmc">
      <property name="title">
       <string>TMC4671</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="3" alignment="Qt::AlignTop">
-       <widget class="QGroupBox" name="groupBox_2">
+      <item row="5" column="0">
+       <widget class="QFrame" name="frame">
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0" colspan="3">
+       <widget class="QProgressBar" name="progressBar_power">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="layoutDirection">
+         <enum>Qt::LeftToRight</enum>
+        </property>
+        <property name="maximum">
+         <number>28000</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="textVisible">
+         <bool>true</bool>
+        </property>
+        <property name="format">
+         <string>%p% Power</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2" rowspan="2">
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="1" column="0" rowspan="4" colspan="2">
+       <widget class="PlotWidget" name="graphWidget_Amps" native="true">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>1</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QGroupBox" name="groupBox_4">
         <property name="maximumSize">
          <size>
-          <width>225</width>
+          <width>253</width>
           <height>16777215</height>
          </size>
         </property>
         <property name="title">
-         <string>PIDs</string>
+         <string>More</string>
         </property>
-        <layout class="QFormLayout" name="formLayout">
+        <layout class="QFormLayout" name="formLayout_3">
          <item row="0" column="0">
-          <widget class="QLabel" name="label_3">
+          <widget class="QLabel" name="label_9">
            <property name="text">
-            <string>Torque P</string>
+            <string>Max field weakening</string>
            </property>
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QSpinBox" name="spinBox_tp">
+          <widget class="QSpinBox" name="spinBox_fluxoffset">
            <property name="maximum">
-            <number>32767</number>
+            <number>10000</number>
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_4">
+         <item row="1" column="0" colspan="2">
+          <widget class="QLabel" name="label_10">
            <property name="text">
-            <string>Torque I</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Can increase max speed on steppers.&lt;/p&gt;&lt;p&gt;Caution! Too high will cause&lt;br/&gt;instability or oscillation!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
-          <widget class="QSpinBox" name="spinBox_ti">
-           <property name="maximum">
-            <number>32767</number>
+         <item row="2" column="0" colspan="2">
+          <widget class="Line" name="line">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
            </property>
           </widget>
          </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_5">
+         <item row="3" column="0" colspan="2">
+          <widget class="QPushButton" name="pushButton_align">
            <property name="text">
-            <string>Flux P</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QSpinBox" name="spinBox_fp">
-           <property name="maximum">
-            <number>32767</number>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>Flux I</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QSpinBox" name="spinBox_fi">
-           <property name="maximum">
-            <number>32767</number>
+            <string>Align Encoder</string>
            </property>
           </widget>
          </item>
          <item row="5" column="0">
-          <widget class="QPushButton" name="pushButton_submitpid">
+          <widget class="QLabel" name="label_11">
            <property name="text">
-            <string>Change pids</string>
+            <string>Motor current:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLabel" name="label_Current">
+           <property name="text">
+            <string>0A</string>
            </property>
           </widget>
          </item>
          <item row="4" column="0" colspan="2">
-          <widget class="QCheckBox" name="checkBox_advancedpid">
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Toggles between parallel and sequential PI modes. Requires retuning.&lt;br/&gt;Advanced (sequential) can improve impulse response.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <widget class="Line" name="line_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
            </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="label_12">
            <property name="text">
-            <string>Advanced mode</string>
+            <string>Temperature:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QLabel" name="label_Temp">
+           <property name="text">
+            <string>0°C</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="label_13">
+           <property name="text">
+            <string>Voltage:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QLabel" name="label_volt">
+           <property name="text">
+            <string>0V</string>
            </property>
           </widget>
          </item>
         </layout>
        </widget>
       </item>
-      <item row="0" column="0" colspan="2" alignment="Qt::AlignTop">
+      <item row="0" column="0">
        <widget class="QGroupBox" name="groupBox_3">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>1</horstretch>
+          <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
@@ -207,7 +273,7 @@
            </property>
           </widget>
          </item>
-         <item row="4" column="0">
+         <item row="4" column="0" colspan="2">
           <widget class="QPushButton" name="pushButton_submitmotor">
            <property name="text">
             <string>Change motor</string>
@@ -217,98 +283,124 @@
         </layout>
        </widget>
       </item>
-      <item row="8" column="0">
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
+      <item row="0" column="2" rowspan="2">
+       <widget class="QGroupBox" name="groupBox_2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
-        <property name="sizeHint" stdset="0">
+        <property name="maximumSize">
          <size>
-          <width>20</width>
-          <height>40</height>
+          <width>253</width>
+          <height>16777215</height>
          </size>
         </property>
-       </spacer>
-      </item>
-      <item row="3" column="0" rowspan="3">
-       <widget class="QGroupBox" name="groupBox_4">
         <property name="title">
-         <string>More</string>
+         <string>PIDs</string>
         </property>
-        <layout class="QFormLayout" name="formLayout_3">
+        <layout class="QFormLayout" name="formLayout">
          <item row="0" column="0">
-          <widget class="QLabel" name="label_9">
+          <widget class="QLabel" name="label_3">
            <property name="text">
-            <string>Max field weakening</string>
+            <string>Torque P</string>
            </property>
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QSpinBox" name="spinBox_fluxoffset">
+          <widget class="QSpinBox" name="spinBox_tp">
            <property name="maximum">
-            <number>10000</number>
+            <number>32767</number>
            </property>
           </widget>
          </item>
-         <item row="1" column="0" colspan="2">
-          <widget class="QLabel" name="label_10">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_4">
            <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Can increase max speed.&lt;/p&gt;&lt;p&gt;Caution! Too high will cause&lt;br/&gt;overshoot or even runaway!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>Torque I</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="0" colspan="2">
-          <widget class="Line" name="line">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+         <item row="1" column="1">
+          <widget class="QSpinBox" name="spinBox_ti">
+           <property name="maximum">
+            <number>32767</number>
            </property>
           </widget>
          </item>
-         <item row="3" column="0" colspan="2">
-          <widget class="QPushButton" name="pushButton_align">
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_5">
            <property name="text">
-            <string>Align Encoder</string>
+            <string>Flux P</string>
            </property>
           </widget>
          </item>
-         <item row="5" column="0">
-          <widget class="QLabel" name="label_11">
-           <property name="text">
-            <string>Motor current:</string>
+         <item row="2" column="1">
+          <widget class="QSpinBox" name="spinBox_fp">
+           <property name="maximum">
+            <number>32767</number>
            </property>
           </widget>
          </item>
-         <item row="5" column="1">
-          <widget class="QLabel" name="label_Current">
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_6">
            <property name="text">
-            <string>0A</string>
+            <string>Flux I</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QSpinBox" name="spinBox_fi">
+           <property name="maximum">
+            <number>32767</number>
            </property>
           </widget>
          </item>
          <item row="4" column="0" colspan="2">
-          <widget class="Line" name="line_2">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+          <widget class="QCheckBox" name="checkBox_advancedpid">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Toggles between parallel and sequential PI modes. Requires retuning.&lt;br/&gt;Advanced (sequential) can improve impulse response.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Sequential PI mode</string>
            </property>
           </widget>
          </item>
+         <item row="7" column="0">
+          <widget class="QPushButton" name="pushButton_submitpid">
+           <property name="text">
+            <string>Change pids</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0" colspan="2">
+          <widget class="QCheckBox" name="checkBox_P_Precision">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>P Precision (1/16)</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">buttonGroup_precision</string>
+           </attribute>
+          </widget>
+         </item>
+         <item row="6" column="0" colspan="2">
+          <widget class="QCheckBox" name="checkBox_I_Precision">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>I Precision (1/16)</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">buttonGroup_precision</string>
+           </attribute>
+          </widget>
+         </item>
         </layout>
-       </widget>
-      </item>
-      <item row="9" column="0" colspan="4">
-       <widget class="QProgressBar" name="progressBar_power">
-        <property name="maximum">
-         <number>28000</number>
-        </property>
-        <property name="value">
-         <number>0</number>
-        </property>
-        <property name="textVisible">
-         <bool>true</bool>
-        </property>
-        <property name="format">
-         <string>%p% Power</string>
-        </property>
        </widget>
       </item>
      </layout>
@@ -316,6 +408,21 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PlotWidget</class>
+   <extends>QWidget</extends>
+   <header>pyqtgraph.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
+ <buttongroups>
+  <buttongroup name="buttonGroup_precision">
+   <property name="exclusive">
+    <bool>false</bool>
+   </property>
+  </buttongroup>
+ </buttongroups>
 </ui>
