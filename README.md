@@ -20,7 +20,7 @@ Then you need to manually install for example the STM VCP driver for the device.
 
 Dependencies:
 
-PyQt5
-pyqtgraph (For TMC graph)
-pyusb and libusb-1.0.dll for DFU
-intelhex for uploading hex files
+- `PyQt5`
+- `pyqtgraph` (For TMC graph)
+- `pyusb` and `libusb-1.0.dll` for DFU
+- `intelhex` for uploading hex files
