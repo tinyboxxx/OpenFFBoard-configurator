@@ -340,7 +340,10 @@ if __name__ == '__main__':
     # get language in config
     if config['MAIN'].get('gui_language') == 'ZH-CN':  # when config says we want Chinese translation
         trans = QTranslator()
-        trans.load("./res/serialchooser_zh_CN")  # Read the translation file, omitting the .qm suffix
+        print('translating')
+        trans.load("./res/ZH-CN/serialchooser")  # Read the translation file, omitting the .qm suffix
+        # trans.load("./res/ZH-CN/MainWindow")  # Read the translation file, omitting the .qm suffix
+        # trans.load("./res/ZH-CN/tmc4671_ui")  # Read the translation file, omitting the .qm suffix
         app.installTranslator(trans)  # translate
 
     window = MainUi()
