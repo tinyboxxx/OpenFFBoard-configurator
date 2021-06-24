@@ -1,17 +1,21 @@
-#from fbs_runtime.application_context.PyQt5 import ApplicationContext
+# from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QWidget,QGroupBox,QDialog,QVBoxLayout,QMessageBox
-from PyQt5.QtCore import QIODevice,pyqtSignal
-from PyQt5.QtCore import QTimer,QThread
+from PyQt5.QtWidgets import QWidget, QGroupBox, QDialog, QVBoxLayout, QMessageBox
+from PyQt5.QtCore import QIODevice, pyqtSignal
+from PyQt5.QtCore import QTimer, QThread
 from PyQt5.QtCore import QTranslator
 from PyQt5 import uic
-from PyQt5.QtSerialPort import QSerialPort,QSerialPortInfo 
-import sys,itertools
+from PyQt5.QtSerialPort import QSerialPort, QSerialPortInfo
+import sys
+import itertools
 import config 
 from helper import res_path
 import serial_ui
 from dfu_ui import DFUModeUI
+
+from configparser import ConfigParser
+
 
 # This GUIs version
 version = "1.3.10"
@@ -30,6 +34,7 @@ import midi_ui
 import errors
 import tmcdebug_ui
 
+
 class MainUi(QMainWindow):
     serial = None
     mainClassUi = None
@@ -43,7 +48,7 @@ class MainUi(QMainWindow):
         self.serial = QSerialPort()
         #self.serial.moveToThread(self.serialThread)
 
-        self.comms = serial_comms.SerialComms(self,self.serial)
+        self.comms = serial_comms.SerialComms(self, self.serial)
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.updateTimer)
@@ -56,10 +61,11 @@ class MainUi(QMainWindow):
         self.activeClasses = {}
 
         self.fwverstr = None
-        
-        
+
+        self.trans = QTranslator(self)
+
     def setup(self):
-        self.serialchooser = serial_ui.SerialChooser(serial=self.serial,main = self)
+        self.serialchooser = serial_ui.SerialChooser(serial=self.serial, main = self)
         self.tabWidget_main.addTab(self.serialchooser,"Serial")
         
         #self.serial.readyRead.connect(self.serialReceive)
@@ -78,6 +84,10 @@ class MainUi(QMainWindow):
         self.actionSave_chip_config.triggered.connect(self.saveConfig)
         self.actionErrors.triggered.connect(self.errorsDialog.show) # Open error list
         self.actionRestore_chip_config.triggered.connect(self.loadConfig)
+
+        self.actionTranslateToZHCN.triggered.connect(self.languageSelector_to_ZHCN)
+        self.actionTranslateToENUS.triggered.connect(self.languageSelector_to_ENUS)
+
         self.serialchooser.connected.connect(self.actionSave_chip_config.setEnabled)
         self.serialchooser.connected.connect(self.actionRestore_chip_config.setEnabled)
 
@@ -114,6 +124,25 @@ class MainUi(QMainWindow):
         msg = QMessageBox(QMessageBox.Information,"Restore flash dump","Uploaded flash dump.\nPlease reboot.")
         msg.exec_()
 
+    def languageSelector_to_ZHCN(self):
+        config['MAIN']['gui_language'] = 'ZH-CN'  # set in config.ini that we want chinese translation
+        with open('config.ini', 'w') as configfile:  # save current config setting into file
+            config.write(configfile)
+        msg = QMessageBox()
+        msg.setWindowTitle("OpenFFB")
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("设置成功，重启软件生效！")
+        x = msg.exec_()
+
+    def languageSelector_to_ENUS(self):
+        config['MAIN']['gui_language'] = 'EN-US'  # set in config.ini that we want no translation
+        with open('config.ini', 'w') as configfile:  # save current config setting into file
+            config.write(configfile)
+        msg = QMessageBox()
+        msg.setWindowTitle("OpenFFB")
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("OK, please restart configurator to take effect!")
+        x = msg.exec_()
 
     def updateTimer(self):
         def f(i):
@@ -299,19 +328,24 @@ class AboutDialog(QDialog):
             verstr += " / Firmware: " + parent.fwverstr
 
         self.version.setText(verstr)
-        
-            
+
 
 if __name__ == '__main__':
     #appctxt = ApplicationContext()       # 1. Instantiate ApplicationContext
-
     app = QApplication(sys.argv)
-    trans = QTranslator()  # 准备开始翻译
-    trans.load("./res/serialchooser_zh_CN")  # 读取翻译文件，省略.qm后缀
-    app.installTranslator(trans)  # 翻译
+
+    # Read config file
+    config = ConfigParser()
+    config.read('config.ini')
+    # get language in config
+    if config['MAIN'].get('gui_language') == 'ZH-CN':  # when config says we want Chinese translation
+        trans = QTranslator()
+        trans.load("./res/serialchooser_zh_CN")  # Read the translation file, omitting the .qm suffix
+        app.installTranslator(trans)  # translate
+
     window = MainUi()
     window.setWindowTitle("Open FFBoard Configurator")
     window.show()
-    #exit_code = appctxt.app.exec_()      # 2. Invoke appctxt.app.exec_()
-    #sys.exit(exit_code)
+    # exit_code = appctxt.app.exec_()      # 2. Invoke appctxt.app.exec_()
+    # sys.exit(exit_code)
     sys.exit(app.exec_())

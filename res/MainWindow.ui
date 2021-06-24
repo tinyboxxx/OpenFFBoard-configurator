@@ -68,7 +68,7 @@
      <x>0</x>
      <y>0</y>
      <width>644</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -86,8 +86,8 @@
      <property name="title">
       <string>Select Language</string>
      </property>
-     <addaction name="action_Chinese"/>
-     <addaction name="actionEnglish"/>
+     <addaction name="actionTranslateToZHCN"/>
+     <addaction name="actionTranslateToENUS"/>
     </widget>
     <addaction name="actionDFU_Uploader"/>
     <addaction name="actionSave_chip_config"/>
@@ -134,12 +134,12 @@
     <string>Errors</string>
    </property>
   </action>
-  <action name="action_Chinese">
+  <action name="actionTranslateToZHCN">
    <property name="text">
     <string>简体中文(Chinese)</string>
    </property>
   </action>
-  <action name="actionEnglish">
+  <action name="actionTranslateToENUS">
    <property name="text">
     <string>English</string>
    </property>
